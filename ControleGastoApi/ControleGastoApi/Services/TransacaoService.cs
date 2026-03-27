@@ -6,6 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ControleGastoApi.Services
 {
+    /// <summary>
+    /// Serviço responsável pelas regras de negócio relacionadas às transações.
+    ///
+    /// Centraliza validações e garante a integridade dos dados antes de persistir.
+    /// Atua como intermediário entre o Controller e o acesso ao banco de dados.
+    /// </summary>
+
     public class TransacaoService
     {
         private readonly AppDbContext _context;
@@ -14,6 +21,17 @@ namespace ControleGastoApi.Services
         {
             _context = context;
         }
+
+        /// <summary>
+        /// Cria uma nova transação aplicando todas as regras de negócio.
+        ///
+        /// Regras implementadas:
+        /// - O valor da transação deve ser maior que zero
+        /// - A pessoa deve existir
+        /// - Menores de idade não podem possuir receitas
+        /// - A categoria deve existir
+        /// - A categoria deve ser compatível com o tipo da transação
+        /// </summary>
 
         public async Task<TransacaoDTO> Create(Transacoes transacao)
         {
@@ -41,9 +59,11 @@ namespace ControleGastoApi.Services
                 throw new Exception("Categoria incompatível com o tipo.");
 
 
+            // Persistência da transação
             _context.Transacoes.Add(transacao);
             await _context.SaveChangesAsync();
 
+            // Retorno em formato DTO (evita exposição direta da entidade)
             return new TransacaoDTO
             {
                 Id = transacao.Id,
@@ -54,6 +74,13 @@ namespace ControleGastoApi.Services
                 Pessoa = pessoa.Nome ?? ""
             };
         }
+
+        /// <summary>
+        /// Retorna todas as transações cadastradas.
+        ///
+        /// Inclui dados relacionados (Pessoa e Categoria) e
+        /// converte para DTO para padronizar a resposta da API.
+        /// </summary>
 
         public async Task<List<TransacaoDTO>> GetAll()
         {
@@ -68,8 +95,8 @@ namespace ControleGastoApi.Services
                 Descricao = t.Descricao,
                 Valor = t.Valor,
                 Tipo = t.Tipo.ToString(),
-                Categoria = t.Categoria != null ? t.Categoria.Descricao : "",
-                Pessoa = t.Pessoa != null ? t.Pessoa.Nome : ""
+                Categoria = t.Categoria?.Descricao ?? string.Empty,
+                Pessoa = t.Pessoa?.Nome ?? string.Empty
             }).ToList();
         }
     }

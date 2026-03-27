@@ -4,6 +4,17 @@ using ControleGastoApi.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+/// <summary>
+/// Controller responsável pelo gerenciamento de pessoas.
+///
+/// Permite:
+/// - Listar pessoas cadastradas
+/// - Criar novas pessoas
+/// - Atualizar dados existentes
+/// - Excluir pessoas
+/// - Consultar totais de receitas, despesas e saldo por pessoa
+/// </summary>
+
 [ApiController]
 [Route("api/pessoas")]
 public class PessoaController : ControllerBase
@@ -15,6 +26,9 @@ public class PessoaController : ControllerBase
         _context = context;
     }
 
+    /// <summary>
+    /// Retorna todas as pessoas cadastradas.
+    /// </summary>
     [HttpGet]
     public async Task<IActionResult> Get()
     {
@@ -22,6 +36,10 @@ public class PessoaController : ControllerBase
         return Ok(pessoas);
     }
 
+    /// <summary>
+    /// Cria uma nova pessoa.
+    /// Valida o modelo antes de persistir no banco.
+    /// </summary>
     [HttpPost]
     public async Task<IActionResult> Create(Pessoa pessoa)
     {
@@ -34,6 +52,9 @@ public class PessoaController : ControllerBase
         return Ok(pessoa);
     }
 
+    /// <summary>
+    /// Atualiza os dados de uma pessoa existente.
+    /// </summary>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, Pessoa pessoa)
     {
@@ -48,6 +69,9 @@ public class PessoaController : ControllerBase
         return Ok(existente);
     }
 
+    /// <summary>
+    /// Remove uma pessoa pelo identificador.
+    /// </summary>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -61,6 +85,14 @@ public class PessoaController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Retorna o total de receitas, despesas e saldo de cada pessoa.
+    ///
+    /// Para cada pessoa:
+    /// - Soma valores das transações do tipo Receita
+    /// - Soma valores das transações do tipo Despesa
+    /// - Calcula o saldo (Receitas - Despesas)
+    /// </summary>
     [HttpGet("totais")]
     public async Task<IActionResult> GetTotais()
     {
@@ -69,8 +101,11 @@ public class PessoaController : ControllerBase
         var resultado = pessoas.Select(p => new
         {
             Nome = p.Nome,
+
+            // Soma das transações classificadas como receita
             TotalReceitas = p.Transacoes?.Where(t => t.Tipo == TipoTransacao.Receita).Sum(t => t.Valor) ?? 0,
 
+            // Soma das transações classificadas como despesa
             TotalDespesas = p.Transacoes?.Where(t => t.Tipo == TipoTransacao.Despesa).Sum(t => t.Valor) ?? 0
         })
         .Select(p => new
@@ -78,6 +113,8 @@ public class PessoaController : ControllerBase
             p.Nome,
             p.TotalReceitas,
             p.TotalDespesas,
+
+            // Cálculo do saldo final
             Saldo = p.TotalReceitas - p.TotalDespesas
         });
 
