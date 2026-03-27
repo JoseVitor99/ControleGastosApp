@@ -96,26 +96,56 @@ public class PessoaController : ControllerBase
     [HttpGet("totais")]
     public async Task<IActionResult> GetTotais()
     {
-        var pessoas = await _context.Pessoas.Include(p => p.Transacoes).ToListAsync();
+        var pessoas = await _context.Pessoas
+            .Include(p => p.Transacoes)
+            .ToListAsync();
 
-        var resultado = pessoas.Select(p => new
+        var resultado = pessoas.Select(p =>
         {
-            Nome = p.Nome,
+            var totalReceitas = p.Transacoes?
+                .Where(t => t.Tipo == TipoTransacao.Receita)
+                .Sum(t => t.Valor) ?? 0;
 
-            // Soma das transações classificadas como receita
-            TotalReceitas = p.Transacoes?.Where(t => t.Tipo == TipoTransacao.Receita).Sum(t => t.Valor) ?? 0,
+            var totalDespesas = p.Transacoes?
+                .Where(t => t.Tipo == TipoTransacao.Despesa)
+                .Sum(t => t.Valor) ?? 0;
 
-            // Soma das transações classificadas como despesa
-            TotalDespesas = p.Transacoes?.Where(t => t.Tipo == TipoTransacao.Despesa).Sum(t => t.Valor) ?? 0
-        })
-        .Select(p => new
+            return new
+            {
+                Id = p.Id,
+                Nome = p.Nome,
+                TotalReceitas = totalReceitas,
+                TotalDespesas = totalDespesas,
+                Saldo = totalReceitas - totalDespesas
+            };
+        });
+
+        return Ok(resultado);
+    }
+
+    /// <summary>
+    /// Retorna o total de transações por cada pessoa.
+    ///
+    /// Para cada pessoa ele busca transação com o seu id e retorna o total de transações, descrição, valor, tipo e categoria.
+    /// </summary>
+    [HttpGet("{id}/transacoes")]
+    public async Task<IActionResult> GetTransacoesPorPessoa(int id)
+    {
+        var pessoa = await _context.Pessoas
+            .Include(p => p.Transacoes)
+            .ThenInclude(t => t.Categoria)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (pessoa == null)
+            return NotFound("Pessoa não encontrada.");
+
+        var resultado = pessoa.Transacoes.Select(t => new
         {
-            p.Nome,
-            p.TotalReceitas,
-            p.TotalDespesas,
-
-            // Cálculo do saldo final
-            Saldo = p.TotalReceitas - p.TotalDespesas
+            Id = t.Id,
+            Descricao = t.Descricao,
+            Valor = t.Valor,
+            Tipo = t.Tipo.ToString(),
+            Categoria = t.Categoria != null ? t.Categoria.Descricao : ""
         });
 
         return Ok(resultado);
