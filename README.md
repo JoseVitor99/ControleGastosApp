@@ -103,7 +103,7 @@ DTO         -> Objetos de transferência de dados
 
 ### Backend
 
-cd ControleGastoApi
+cd ControleGastoApi/ControleGastoApi
 
 dotnet run
 
