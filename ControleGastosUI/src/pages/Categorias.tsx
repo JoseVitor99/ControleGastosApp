@@ -49,6 +49,26 @@ export default function Categorias() {
      * e atualiza a listagem após sucesso
      */
     const submit = async () => {
+        if (!descricao.trim()) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Informe a descrição.",
+                life: 3000
+            });
+            return;
+        }
+
+        if (!finalidade) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Selecione a finalidade.",
+                life: 3000
+            });
+            return;
+        }
+
         try {
             await api.post("/categorias", { descricao, finalidade });
 

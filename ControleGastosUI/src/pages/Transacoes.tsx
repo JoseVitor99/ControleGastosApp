@@ -49,6 +49,46 @@ export default function Transacoes() {
      * Envia os dados da transação para a API
      */
     const submit = async () => {
+        if (!descricao.trim()) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Informe a descrição.",
+                life: 3000
+            });
+            return;
+        }
+
+        if (!valor || valor <= 0) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Informe um valor válido.",
+                life: 3000
+            });
+            return;
+        }
+
+        if (!pessoaId) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Selecione uma pessoa.",
+                life: 3000
+            });
+            return;
+        }
+
+        if (!categoriaId) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Selecione uma categoria.",
+                life: 3000
+            });
+            return;
+        }
+
         try {
             await api.post("/transacoes", {
                 descricao,

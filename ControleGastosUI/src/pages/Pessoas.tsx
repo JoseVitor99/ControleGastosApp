@@ -55,6 +55,26 @@ export default function Pessoas() {
      * caso não, cria um novo registro (POST).
      */
     const submit = async () => {
+        if (!nome.trim()) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Informe o nome.",
+                life: 3000
+            });
+            return;
+        }
+
+        if (!idade || idade <= 0) {
+            toast.current?.show({
+                severity: "warn",
+                summary: "Atenção",
+                detail: "Informe uma idade válida.",
+                life: 3000
+            });
+            return;
+        }
+
         try {
             if (editandoId) {
                 // Atualização de registro existente
