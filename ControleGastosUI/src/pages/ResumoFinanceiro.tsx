@@ -20,6 +20,8 @@ import { Column } from "primereact/column";
 export default function Dashboard() {
     const [totaisPessoas, setTotaisPessoas] = useState<any[]>([]);
     const [totaisCategorias, setTotaisCategorias] = useState<any[]>([]);
+    const [expancaoTrans, setExpancaoTrans] = useState<any>(null);
+    const [transacoes, setTransacoes] = useState<any>({});
 
     /**
      * Carrega os dados totais de pessoas e categorias
@@ -35,6 +37,21 @@ export default function Dashboard() {
     useEffect(() => {
         load();
     }, []);
+
+    /**
+     * Carrega os dados totais de pessoas e suas respectivas transações para exibição na expansão da linha.
+     */
+    const loadTransacoes = async (e: any) => {
+        var pessoaId = e.data.id;
+        if (!transacoes[pessoaId]) {
+            const response = await api.get(`/pessoas/${pessoaId}/transacoes`);
+            console.log(response.data);
+            setTransacoes((prev: any) => ({
+                ...prev,
+                [pessoaId]: response.data
+            }));
+        }
+    };
 
     /**
      * Cálculo dos totais gerais por pessoa
@@ -62,6 +79,33 @@ export default function Dashboard() {
         <span>{moeda(row.saldo)}</span>
     );
 
+    /**
+     * Expande a linha da pessoa para mostrar suas transações, com formatação personalizada
+     */
+    const transacaoExpandida = (pessoa: any) => {
+        return (
+            <div className="p-3">
+                <h5>Transações de {pessoa.nome}</h5>
+
+                <DataTable value={transacoes[pessoa.id] || []} dataKey="id" emptyMessage="Sem transações">
+                    <Column field="descricao" header="Descrição" />
+                    <Column
+                        field="valor"
+                        header="Valor"
+                        body={(row) =>
+                            row.valor.toLocaleString("pt-BR", {
+                                style: "currency",
+                                currency: "BRL"
+                            })
+                        }
+                    />
+                    <Column field="tipo" header="Tipo" />
+                    <Column field="categoria" header="Categoria" />
+                </DataTable>
+            </div>
+        );
+    };
+
     return (
         <div className="p-4">
 
@@ -71,23 +115,19 @@ export default function Dashboard() {
 
                     <h2 className="mb-3">Consulta de Totais por Pessoa</h2>
 
-                    <DataTable value={totaisPessoas} emptyMessage="Nenhum registro encontrado">
+                    <DataTable
+                        value={totaisPessoas}
+                        expandedRows={expancaoTrans}
+                        onRowToggle={(e) => setExpancaoTrans(e.data)}
+                        onRowExpand={(e) => { loadTransacoes(e); }}
+                        rowExpansionTemplate={transacaoExpandida}
+                        dataKey="id"
+                    >
+                        <Column expander style={{ width: '3em' }} />
                         <Column field="nome" header="Pessoa" />
-
-                        <Column
-                            header="Receitas"
-                            body={(row) => moeda(row.totalReceitas)}
-                        />
-
-                        <Column
-                            header="Despesas"
-                            body={(row) => moeda(row.totalDespesas)}
-                        />
-
-                        <Column
-                            header="Saldo"
-                            body={formatacaoSaldo}
-                        />
+                        <Column header="Receitas" body={(row) => moeda(row.totalReceitas)} />
+                        <Column header="Despesas" body={(row) => moeda(row.totalDespesas)} />
+                        <Column header="Saldo" body={(row) => moeda(row.saldo)} />
                     </DataTable>
 
                     <div className="mt-4 p-3 border-top-1 surface-border">
