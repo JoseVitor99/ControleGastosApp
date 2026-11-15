@@ -1,0 +1,26 @@
+# =========================
+# Banco de dados
+# =========================
+*.db
+
+# =========================
+# .NET
+# =========================
+bin/
+obj/
+.vs/
+
+# =========================
+# React / Node
+# =========================
+node_modules/
+build/
+dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ambiente
+.env
